@@ -12,7 +12,6 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[wasm_bindgen]
 extern {
-    
     //! Returns a pseudorandom number between 0 and 1.
     #[wasm_bindgen(js_namespace = Math)]
     pub fn random() -> f64;
@@ -38,6 +37,23 @@ impl fmt::Display for Universe {
             write!(f, "{}", symbol)?;
         }
         Ok(())
+    }
+}
+
+impl Universe {
+    pub fn get_cells(&self) -> &FixedBitSet {
+        &self.cells
+    }
+
+    pub fn set_cells(&mut self, cells: &[(u32, u32)]) {
+        for (row, col) in cells.iter() {
+            let idx = self.get_index(*row, *col);
+            self.cells.set(idx, true);
+        }
+    }
+
+    pub fn empty_cells(&mut self) {
+        self.cells.set_range(.., false);
     }
 }
 
