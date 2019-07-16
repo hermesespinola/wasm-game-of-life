@@ -1,8 +1,8 @@
 mod utils;
 
-use wasm_bindgen::prelude::*;
-use std::fmt;
 use fixedbitset::FixedBitSet;
+use std::fmt;
+use wasm_bindgen::prelude::*;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -11,7 +11,7 @@ use fixedbitset::FixedBitSet;
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[wasm_bindgen]
-extern {
+extern "C" {
     //! Returns a pseudorandom number between 0 and 1.
     #[wasm_bindgen(js_namespace = Math)]
     pub fn random() -> f64;
@@ -63,13 +63,18 @@ impl Universe {
      * Create and initialize a new universe.
      */
     pub fn new(width: u32, height: u32) -> Universe {
+        utils::set_panic_hook();
         let size = (width * height) as usize;
         let mut cells = FixedBitSet::with_capacity(size);
         for i in 0..size {
             cells.set(i, random() < 0.4);
         }
 
-        Universe { width, height, cells }
+        Universe {
+            width,
+            height,
+            cells,
+        }
     }
 
     /**
