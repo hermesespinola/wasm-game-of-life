@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Hello wasm-pack!</title>
+    <title>Hello Game of Life</title>
     <style>
       body {
         position: absolute;
@@ -18,6 +18,11 @@
     </style>
   </head>
   <body>
+    <button id="play-pause">▶</button>
+    <button id="reset">🔁</button>
+    <br>
+    <label for="ticks-per-frame">Ticks per frame</label>
+    <input type="range" name="ticks-per-frame" id="ticks-per-frame" min="1" max="25" value="1">
     <canvas id="game-of-life-canvas"></canvas>
     <script src="./bootstrap.js"></script>
   </body>

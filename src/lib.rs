@@ -15,6 +15,31 @@ extern "C" {
     //! Returns a pseudorandom number between 0 and 1.
     #[wasm_bindgen(js_namespace = Math)]
     pub fn random() -> f64;
+
+    #[wasm_bindgen(js_namespace = console)]
+    pub fn log(msg: &str);
+}
+
+macro_rules! log {
+    ( $( $t:tt )* ) => {
+        log(&format!( $( $t )* ));
+    };
+}
+
+trait SetIterBool {
+    fn set_iter(&mut self, from: usize, source: &[bool]);
+}
+
+impl SetIterBool for FixedBitSet {
+    fn set_iter(&mut self, from: usize, source: &[bool]) {
+        let limit = self.len();
+        let mut idx = from;
+        for item in source.iter() {
+            if idx >= limit { () }
+            self.set(idx, *item);
+            idx += 1;
+        }
+    }
 }
 
 /**
@@ -67,13 +92,64 @@ impl Universe {
         let size = (width * height) as usize;
         let mut cells = FixedBitSet::with_capacity(size);
         for i in 0..size {
-            cells.set(i, random() < 0.4);
+            cells.set(i, random() < 0.3);
         }
 
         Universe {
             width,
             height,
             cells,
+        }
+    }
+
+    pub fn reset(&mut self) {
+        for i in 0..self.cells.len() {
+            self.cells.set(i, random() < 0.3);
+        }
+    }
+
+    /**
+     * Toggle specified cell value.
+     */
+    pub fn toggle_cell(&mut self, row: u32, col: u32) {
+        log!("toggling cell on row {} col {}", row, col);
+        let idx = self.get_index(row, col);
+        let cell = self.cells[idx];
+        self.cells.set(idx, !cell);
+    }
+
+    /**
+     * Put a [Glider](https://en.wikipedia.org/wiki/Glider_(Conway%27s_Life)#Hacker_emblem) with center in row, col.
+     */
+    pub fn put_glider(&mut self, row: u32, col: u32) {
+        log!("putting glidder on row {} col {}", row, col);
+        let col_left = (col + self.width - 1) % self.width;
+
+        let glider_top = [false, true, false];
+        let row_top = (row + self.height - 1) % self.height;
+        self.cells.set_iter(self.get_index(row_top, col_left), &glider_top);
+
+        let glider_middle = [false, false, true];
+        self.cells.set_iter(self.get_index(row, col_left), &glider_middle);
+
+        let glider_bottom = [true, true, true];
+        let row_bottom = (row + 1) % self.height;
+        self.cells.set_iter(self.get_index(row_bottom, col_left), &glider_bottom);
+    }
+
+    pub fn put_pulsar(&mut self, row: u32, col: u32) {
+        log!("putting pulsar on row {} col {}", row, col);
+        let p1 = &[false, false, true, true, true, false, false, false, true, true, true, false, false];
+        let p2 = &[false, false, false, false, false, false, false, false, false, false, false, false, false];
+        let p3 = &[true, false, false, false, false, true, false, true, false, false, false, false, true];
+
+        let pulsar = [p1, p2, p3, p3, p3, p1, p2, p1, p3, p3, p3, p2, p1];
+        let left_col = (col + self.width - 6) % self.width;
+        let mut curr_row = (row + self.height - 6) % self.height;
+        for &line in pulsar.iter() {
+            let idx = self.get_index(curr_row, left_col);
+            self.cells.set_iter(idx, line);
+            curr_row = (curr_row + 1) % self.height;
         }
     }
 
